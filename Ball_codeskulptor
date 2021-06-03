@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_0.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_1.py
 
 import simplegui
 import random
@@ -14,8 +14,11 @@ ballRadius = 5
 ballBorder = 0.1
 
 ballVelocity = []
+ballColor = []
 
 heat = 2.5
+
+pause = False
 
 pressure = 0.0
 pressureTime = 0
@@ -56,11 +59,18 @@ def draw(canvas):
     global ball, pressureTime, heat
     
     # Drawing each ball
-    for n in range(len(ball)):        
-        canvas.draw_circle([ball[n][0], ball[n][1]], ballRadius, ballBorder, 'Transparent', 'White')
+    for n in range(len(ball)):
+        canvas.draw_circle([ball[n][0], ball[n][1]], ballRadius, ballBorder, 'Transparent', ballColor[n])
+        
+        if ballColor[n] == 'Red' and not pause:
+            print(ballVelocity[n])
             
     canvas.draw_polygon([[screenSize, screenSize], [screen[0], screenSize], [screen[0], 0], [screenSize, 0]], 2, 'Transparent', 'Black')
     canvas.draw_polygon([[screenSize, screenSize], [0, screenSize], [0, 0], [screenSize, 0]], 2, 'White', 'Transparent')
+    
+    #pause
+    canvas.draw_polygon([[screen[0]-250, 50], [screen[0]-250, 0], [screen[0]-300, 0], [screen[0]-300, 50]], 2, 'White', 'Transparent')
+
     
     # ball+, ball-
     canvas.draw_polygon([[screen[0]-50, 50], [screen[0]-50, 0], [screen[0]-100, 0], [screen[0]-100, 50]], 2, 'White', 'Transparent')
@@ -97,9 +107,23 @@ def draw(canvas):
 
 # Handler to mouse click
 def mouse_handler(position):
-    global ball, ballVelocity, heat
+    global ball, ballVelocity, ballColor, heat, pause
     
     mousePosition = [position[0],position[1]]
+    
+    # pause
+    if screen[0]-300 < mousePosition[0] < screen[0] - 250 and 0 < mousePosition[1] < 50:
+        if not pause:
+            work.stop()
+            timer.stop()
+            
+            pause = True
+            
+        else:
+            work.start()
+            timer.start()
+            
+            pause = False
     
     # ball +-
     if 0 < mousePosition[1] < 50:
@@ -108,12 +132,14 @@ def mouse_handler(position):
             
             ball.append([random.triangular(ballRadius,screenSize - ballRadius), random.triangular(ballRadius,screenSize - ballRadius)])
             ballVelocity.append([random.triangular(-1,1), random.triangular(-1,1)])
+            ballColor.append('White')
             
         if screen[0] - 50 < mousePosition[0] < screen[0]:
             if len(ball) != 0:
                 y = random.randint(0, len(ball) - 1)
                 ball.pop(y)
                 ballVelocity.pop(y)
+                ballColor.pop(y)
                 
     # ball +- 10
     if 50 < mousePosition[1] <100:
@@ -124,6 +150,7 @@ def mouse_handler(position):
                 
                 ball.append([random.triangular(ballRadius,screenSize - ballRadius), random.triangular(ballRadius,screenSize - ballRadius)])
                 ballVelocity.append([random.triangular(-1,1), random.triangular(-1,1)])
+                ballColor.append('White')
             
         if screen[0] - 50 < mousePosition[0] < screen[0]:
             if len(ball) != 0:
@@ -132,10 +159,12 @@ def mouse_handler(position):
                         y = random.randint(0, len(ball) - 1)
                         ball.pop(y)
                         ballVelocity.pop(y)
+                        ballColor.pop(y)
                         
                 else:
                     ball = []
                     ballVelocity = []
+                    ballColor = []
                 
     # heat +-
     if 150 < mousePosition[1] < 200:
@@ -165,6 +194,17 @@ def mouse_handler(position):
                 
             else:
                 heat = 0
+                
+    # Coloring in pause
+    if pause:
+        for n in range(len(ball)):
+            if distance(mousePosition, ball[n]) <= ballRadius:
+                if ballColor[n] != 'Red':
+                    ballColor[n] = 'Red'
+                    
+                else:
+                    ballColor[n] = 'White'
+                    
 
 # Work in interation
 def work_handler():
@@ -230,7 +270,7 @@ def timer_handler():
     pressure = (pressureTime + pressure) / 2
     pressureTime = 0
     
-    print(f'Min = {min}, nB = {len(ball)}, heat = {heat} ppm = {round(pressure,1)}')
+    # print(f'Min = {min}, nB = {len(ball)}, heat = {heat} ppm = {round(pressure,1)}')
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("Home", screen[0], screen[1])
