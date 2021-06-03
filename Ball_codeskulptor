@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_2.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_3.py
 
 import simplegui
 import random
@@ -12,6 +12,7 @@ ballRadius = 5
 ballBorder = 0.1
 
 ball = [[screenSize - ballRadius, screenSize / 2]]
+ballMFP = []
 ballVelocity = []
 ballColor = []
 
@@ -60,21 +61,22 @@ def collision(v1, v2, p1, p2):
     # Returning bouth velocities
     return v1,v2
 
+# Mean free path
+def meanFreePath(n, ball):
+    global ballMFP
+    
+    print(distance(ball, ballMFP[n]))
+    
+    ballMFP[n] = list(ball)
+
 # Handler to draw on canvas
 def draw(canvas):
-    global ball, pressureTime, heat, timeStatus, time
+    global ball, pressureTime, heat
     
     # Drawing each ball
     for n in range(len(ball)-1):
         canvas.draw_circle([ball[n][0], ball[n][1]], ballRadius, ballBorder, 'Transparent', ballColor[n])
         
-        if ballColor[n] == 'Red' and not pause:
-            print(f'{time} Bola {n} = ', ballVelocity[n])
-            timeStatus = True
-    
-    if timeStatus:
-        time += 1
-        timeStatus = False
     
     canvas.draw_polygon([[screenSize, screenSize], [screen[0], screenSize], [screen[0], 0], [screenSize, 0]], 2, 'Transparent', 'Black')
     canvas.draw_polygon([[screenSize, screenSize], [0, screenSize], [0, 0], [screenSize, 0]], 2, 'White', 'Transparent')
@@ -221,12 +223,17 @@ def mouse_handler(position):
 
 # Work in interation
 def work_handler():
-    global ball, ballVelocity, canNew, needNewBall, pressureTime, heat
+    global ball, ballVelocity, canNew, needNewBall, pressureTime, heat, timeStatus, time
     
     canNew = True
     
     # For every ball
     for n in range(len(ballVelocity)):
+        
+        # For print the velocity of selected balls
+        if ballColor[n] == 'Red' and not pause:
+            print(f'{time} Bola {n} = ', ballVelocity[n])
+            timeStatus = True
         
         # Making a list of all balls exept alredy tested and itself
         listy = list(range(len(ball)))
@@ -237,15 +244,23 @@ def work_handler():
         
         # Cheking if is in collision
         for i in listy:
-            if n != i and distance(ball[n],ball[i]) <= 2 * ballRadius:
+            
+            # Collision for entering balls
+            if n == len(ballVelocity) or i == len(ballVelocity):
                 
-                if n == len(ballVelocity) or i == len(ballVelocity):
+                if n != i and distance(ball[n],ball[i]) <= 3 * ballRadius:
                     canNew = False
-                    
-                else:
+            
+            # General colision
+            else:
+                
+                if n != i and distance(ball[n],ball[i]) <= 2 * ballRadius:
+                
                     #print('collision')
                     ballVelocity[n], ballVelocity[i] = collision(ballVelocity[n], ballVelocity[i], ball[n], ball[i])
-        
+                    
+                    meanFreePath(n, ball[n])
+                    meanFreePath(i, ball[i])
         
         # Moving the ball
         
@@ -266,7 +281,9 @@ def work_handler():
                 
                 ballVelocity[n][0] = -ballVelocity[n][0]
                 ball[n][0] = (2 * (screenSize - ballRadius)) - ball[n][0]
-                
+            
+            meanFreePath(n, ball[n])
+            
             pressureTime += 1
         
         if not ballRadius < ball[n][1] < screenSize - ballRadius:
@@ -278,17 +295,25 @@ def work_handler():
             elif ball[n][1] >= screenSize - ballRadius:
                 ball[n][1] = (2 * (screenSize - ballRadius)) - ball[n][1]
             
+            meanFreePath(n, ball[n])
+            
             pressureTime += 1
-            
+    
+    # time of the print
+    if timeStatus:
+        time += 1
+        timeStatus = False
+    
+    # if it's all ok to create a new ball
     if canNew and needNewBall != 0:
-            
+        
         ball.append(list(newBallPosition))
+        ballMFP.append(list(newBallPosition))
         ballVelocity.append([random.triangular(-1,-0.01), random.triangular(-1,1)])
         ballColor.append('White')
         
         needNewBall -= 1
         
-    #print(canNew,needNewBall)
     
 # Triger per minute for pressure mesure
 def timer_handler():
