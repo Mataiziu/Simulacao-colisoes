@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_3.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_4.py
 
 import simplegui
 import random
@@ -8,7 +8,7 @@ screenSize = 500
 
 screen = [16 * screenSize / 9, screenSize]
 
-ballRadius = 5
+ballRadius = 50
 ballBorder = 0.1
 
 ball = [[screenSize - ballRadius, screenSize / 2]]
@@ -65,7 +65,7 @@ def collision(v1, v2, p1, p2):
 def meanFreePath(n, ball):
     global ballMFP
     
-    print(distance(ball, ballMFP[n]))
+    #print(distance(ball, ballMFP[n]))
     
     ballMFP[n] = list(ball)
 
@@ -154,11 +154,8 @@ def mouse_handler(position):
             needNewBall += 1
             
         if screen[0] - 50 < mousePosition[0] < screen[0]:
-            if len(ballVelocity) != 0:
-                y = random.randint(0, len(ballVelocity) - 1)
-                ball.pop(y)
-                ballVelocity.pop(y)
-                ballColor.pop(y)
+            
+            needNewBall -= 1
                 
     # ball +- 10
     if 50 < mousePosition[1] <100:
@@ -168,18 +165,8 @@ def mouse_handler(position):
             needNewBall += 10
             
         if screen[0] - 50 < mousePosition[0] < screen[0]:
-            if len(ballVelocity) != 0:
-                if len(ballVelocity) > 10:
-                    for i in range(10):
-                        y = random.randint(0, len(ballVelocity) - 1)
-                        ball.pop(y)
-                        ballVelocity.pop(y)
-                        ballColor.pop(y)
-                        
-                else:
-                    ball = [[screenSize - ballRadius, screenSize / 2]]
-                    ballVelocity = []
-                    ballColor = []
+            
+            needNewBall -= 10
                 
     # heat +-
     if 150 < mousePosition[1] < 200:
@@ -223,7 +210,7 @@ def mouse_handler(position):
 
 # Work in interation
 def work_handler():
-    global ball, ballVelocity, canNew, needNewBall, pressureTime, heat, timeStatus, time
+    global ball, ballVelocity, ballMFP, ballColor, canNew, needNewBall, pressureTime, heat, timeStatus, time
     
     canNew = True
     
@@ -305,7 +292,7 @@ def work_handler():
         timeStatus = False
     
     # if it's all ok to create a new ball
-    if canNew and needNewBall != 0:
+    if canNew and needNewBall > 0:
         
         ball.append(list(newBallPosition))
         ballMFP.append(list(newBallPosition))
@@ -314,7 +301,25 @@ def work_handler():
         
         needNewBall -= 1
         
-    
+    elif needNewBall < 0:
+        if len(ballVelocity) > 0:
+            
+            y = random.randint(0, len(ballVelocity) - 1)
+            ball.pop(y)
+            ballMFP.pop(y)
+            ballVelocity.pop(y)
+            ballColor.pop(y)
+            
+            needNewBall += 1
+        else:
+            
+            ball = [[screenSize - ballRadius, screenSize / 2]]
+            ballMFP = [[screenSize - ballRadius, screenSize / 2]]
+            ballVelocity = []
+            ballColor = []
+            
+            needNewBall = 0
+            
 # Triger per minute for pressure mesure
 def timer_handler():
     global pressure, pressureTime
