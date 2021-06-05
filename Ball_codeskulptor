@@ -1,333 +1,350 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_4.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_5.py
 
 import simplegui
 import random
 import math
 
-screenSize = 500
+screen_size = 500
 
-screen = [16 * screenSize / 9, screenSize]
+screen = [16 * screen_size / 9, screen_size]
 
-ballRadius = 50
-ballBorder = 0.1
+ball_radius = 5
+ball_border = 0.1
 
-ball = [[screenSize - ballRadius, screenSize / 2]]
+ball = [[screen_size - ball_radius, screen_size / 2]]
 ballMFP = []
-ballVelocity = []
-ballColor = []
+ball_velocity = []
+ball_color = []
 
-newBallPosition = [screenSize - ballRadius, screenSize / 2]
-canNew = True
+new_ball_position = [screen_size - ball_radius, screen_size / 2]
+can_new = True
 
-needNewBall = 0
+need_new_ball = 0
 
 heat = 2.5
 
 pause = False
 time = 1
-timeStatus = False
+time_status = False
 
 pressure = 0.0
-pressureTime = 0
+pressure_time = 0
 
-min = 0
+minute = 0
 
-print(f'Minute = {min}, amount of balls = {len(ball)}, heat = {heat} pressure per min = {pressure}')
+print(f'Minute = {minute}, amount of balls = {len(ball)}, heat = {heat} pressure per min = {pressure}')
+
 
 # Distance between two balls
-def distance(ball1,ball2):
-    return (math.sqrt(((ball1[0] - ball2[0]) **2) + ((ball1[1] - ball2[1])**2)))
-    
-# Gives velocity vectors after collision       
+def distance(ball1, ball2):
+    return math.sqrt(((ball1[0] - ball2[0]) ** 2) + ((ball1[1] - ball2[1]) ** 2))
+
+
+# Gives velocity vectors after collision
 def collision(v1, v2, p1, p2):
-    
     # Vector at the ball collision center
-    vetor = [p2[0] - p1[0], p2[1] - p1[1]]
-    
+    vector = [p2[0] - p1[0], p2[1] - p1[1]]
+
     # Finding unit normal and unit tangent vector
-    module = math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
-    k = [vetor[0]/module, vetor[1]/module]
-    
-    vRelative = [v1[0] - v2[0], v1[1] - v2[1]]
-    
+    module = math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+    k = [vector[0] / module, vector[1] / module]
+
+    v_relative = [v1[0] - v2[0], v1[1] - v2[1]]
+
     # Creating the velocity vectors onto the unit normal and unit tangent vectors
-    v_normal = vRelative[0]*k[0] + vRelative[1]*k[1]
-    
-    v_normal = [k[0]*v_normal, k[1]*v_normal]
-    
+    v_normal = v_relative[0] * k[0] + v_relative[1] * k[1]
+
+    v_normal = [k[0] * v_normal, k[1] * v_normal]
+
     v1 = [v1[0] - v_normal[0], v1[1] - v_normal[1]]
     v2 = [v2[0] + v_normal[0], v2[1] + v_normal[1]]
-    
-    # Returning bouth velocities
-    return v1,v2
+
+    # Returning both velocities
+    return v1, v2
+
+
+def general_collision(n):
+    global ball_velocity, can_new
+
+    # Making a list of all balls except already tested and itself
+    list_y = list(range(len(ball)))
+
+    for j in list(range(n)):
+        list_y.remove(j)
+
+    # Checking if is in collision
+    for i in list_y:
+
+        # Collision for entering balls
+        if n == len(ball_velocity) or i == len(ball_velocity):
+
+            if n != i and distance(ball[n], ball[i]) <= 3 * ball_radius:
+                can_new = False
+
+        # General collision
+        else:
+
+            if n != i and distance(ball[n], ball[i]) <= 2 * ball_radius:
+                # print('collision')
+                ball_velocity[n], ball_velocity[i] = collision(ball_velocity[n], ball_velocity[i], ball[n], ball[i])
+
+                mean_free_path(n)
+                mean_free_path(i)
+
 
 # Mean free path
-def meanFreePath(n, ball):
+def mean_free_path(n):
     global ballMFP
-    
-    #print(distance(ball, ballMFP[n]))
-    
-    ballMFP[n] = list(ball)
+
+    # print(distance(ball[n], ballMFP[n]))
+
+    ballMFP[n] = list(ball[n])
+
 
 # Handler to draw on canvas
 def draw(canvas):
-    global ball, pressureTime, heat
-    
-    # Drawing each ball
-    for n in range(len(ball)-1):
-        canvas.draw_circle([ball[n][0], ball[n][1]], ballRadius, ballBorder, 'Transparent', ballColor[n])
-        
-    
-    canvas.draw_polygon([[screenSize, screenSize], [screen[0], screenSize], [screen[0], 0], [screenSize, 0]], 2, 'Transparent', 'Black')
-    canvas.draw_polygon([[screenSize, screenSize], [0, screenSize], [0, 0], [screenSize, 0]], 2, 'White', 'Transparent')
-    canvas.draw_line([screenSize, (screenSize / 2) + ballRadius], [screenSize, (screenSize / 2) - ballRadius], 4, 'Blue')
-    
-    #pause
-    if pause:
-        canvas.draw_polygon([[screen[0]-250, 50], [screen[0]-250, 0], [screen[0]-300, 0], [screen[0]-300, 50]], 2, 'White', 'White')
-        
-    else:
-        canvas.draw_polygon([[screen[0]-250, 50], [screen[0]-250, 0], [screen[0]-300, 0], [screen[0]-300, 50]], 2, 'White', 'Black')
-        
-    canvas.draw_polygon([[screen[0]-270, 35], [screen[0]-270, 15], [screen[0]-260, 15], [screen[0]-260, 35]], 2, 'White', 'Black')
-    canvas.draw_polygon([[screen[0]-280, 35], [screen[0]-280, 15], [screen[0]-290, 15], [screen[0]-290, 35]], 2, 'White', 'Black')
+    global ball, pressure_time, heat
 
-    
+    # Drawing each ball
+    for n in range(len(ball) - 1):
+        canvas.draw_circle([ball[n][0], ball[n][1]], ball_radius, ball_border, 'Transparent', ball_color[n])
+
+    canvas.draw_polygon([[screen_size, screen_size], [screen[0], screen_size], [screen[0], 0], [screen_size, 0]], 2,
+                        'Transparent', 'Black')
+    canvas.draw_polygon([[screen_size, screen_size], [0, screen_size], [0, 0], [screen_size, 0]], 2, 'White',
+                        'Transparent')
+    canvas.draw_line([screen_size, (screen_size / 2) + ball_radius], [screen_size, (screen_size / 2) - ball_radius], 4,
+                     'Blue')
+
+    # pause
+    if pause:
+        canvas.draw_polygon([[screen[0] - 250, 50], [screen[0] - 250, 0], [screen[0] - 300, 0], [screen[0] - 300, 50]],
+                            2, 'White', 'White')
+
+    else:
+        canvas.draw_polygon([[screen[0] - 250, 50], [screen[0] - 250, 0], [screen[0] - 300, 0], [screen[0] - 300, 50]],
+                            2, 'White', 'Black')
+
+    canvas.draw_polygon([[screen[0] - 270, 35], [screen[0] - 270, 15], [screen[0] - 260, 15], [screen[0] - 260, 35]], 2,
+                        'White', 'Black')
+    canvas.draw_polygon([[screen[0] - 280, 35], [screen[0] - 280, 15], [screen[0] - 290, 15], [screen[0] - 290, 35]], 2,
+                        'White', 'Black')
+
     # ball+, ball-
-    canvas.draw_polygon([[screen[0]-50, 50], [screen[0]-50, 0], [screen[0]-100, 0], [screen[0]-100, 50]], 2, 'White', 'Transparent')
-    canvas.draw_polygon([[screen[0]-2, 50], [screen[0]-2, 0], [screen[0]-50, 0], [screen[0]-50,50]], 2, 'White', 'Transparent')
-    
+    canvas.draw_polygon([[screen[0] - 50, 50], [screen[0] - 50, 0], [screen[0] - 100, 0], [screen[0] - 100, 50]], 2,
+                        'White', 'Transparent')
+    canvas.draw_polygon([[screen[0] - 2, 50], [screen[0] - 2, 0], [screen[0] - 50, 0], [screen[0] - 50, 50]], 2,
+                        'White', 'Transparent')
+
     canvas.draw_text('+ Ball', (screen[0] - 90, 30), 12, 'White')
     canvas.draw_text('- Ball', (screen[0] - 40, 30), 12, 'White')
-    
+
     # ball+10, ball-10
-    canvas.draw_polygon([[screen[0]-50, 50], [screen[0]-50, 100], [screen[0]-100, 100], [screen[0]-100, 50]], 2, 'White', 'Transparent')
-    canvas.draw_polygon([[screen[0]-2, 50], [screen[0]-2, 100], [screen[0]-50, 100], [screen[0]-50, 50]], 2, 'White', 'Transparent')
-    
+    canvas.draw_polygon([[screen[0] - 50, 50], [screen[0] - 50, 100], [screen[0] - 100, 100], [screen[0] - 100, 50]], 2,
+                        'White', 'Transparent')
+    canvas.draw_polygon([[screen[0] - 2, 50], [screen[0] - 2, 100], [screen[0] - 50, 100], [screen[0] - 50, 50]], 2,
+                        'White', 'Transparent')
+
     canvas.draw_text('+10 Ball', (screen[0] - 100, 80), 12, 'White')
     canvas.draw_text('-10 Ball', (screen[0] - 50, 80), 12, 'White')
-    
+
     # heat+, heat-
-    canvas.draw_polygon([[screen[0]-50, 150], [screen[0]-50, 200], [screen[0]-100, 200], [screen[0]-100, 150]], 2, 'White', 'Transparent')
-    canvas.draw_polygon([[screen[0]-2, 150], [screen[0]-2, 200], [screen[0]-50, 200], [screen[0]-50,150]], 2, 'White', 'Transparent')
-    
+    canvas.draw_polygon([[screen[0] - 50, 150], [screen[0] - 50, 200], [screen[0] - 100, 200], [screen[0] - 100, 150]],
+                        2, 'White', 'Transparent')
+    canvas.draw_polygon([[screen[0] - 2, 150], [screen[0] - 2, 200], [screen[0] - 50, 200], [screen[0] - 50, 150]], 2,
+                        'White', 'Transparent')
+
     canvas.draw_text('+ Heat', (screen[0] - 90, 180), 12, 'White')
     canvas.draw_text('- Heat', (screen[0] - 40, 180), 12, 'White')
-    
+
     # heat+1, heat-1
-    canvas.draw_polygon([[screen[0]-50, 250], [screen[0]-50, 200], [screen[0]-100, 200], [screen[0]-100, 250]], 2, 'White', 'Transparent')
-    canvas.draw_polygon([[screen[0]-2, 250], [screen[0]-2, 200], [screen[0]-50, 200], [screen[0]-50,250]], 2, 'White', 'Transparent')
-    
+    canvas.draw_polygon([[screen[0] - 50, 250], [screen[0] - 50, 200], [screen[0] - 100, 200], [screen[0] - 100, 250]],
+                        2, 'White', 'Transparent')
+    canvas.draw_polygon([[screen[0] - 2, 250], [screen[0] - 2, 200], [screen[0] - 50, 200], [screen[0] - 50, 250]], 2,
+                        'White', 'Transparent')
+
     canvas.draw_text('+1 Heat', (screen[0] - 100, 230), 12, 'White')
     canvas.draw_text('-1 Heat', (screen[0] - 50, 230), 12, 'White')
-    
+
     # general text
-    canvas.draw_text('BPM = ' + str(int(pressure)), (screenSize + 20, 20), 12, 'White')
-    canvas.draw_text('Balls = ' + str(len(ballVelocity)), (screenSize + 20, 40), 12, 'White')
-    canvas.draw_text('Heat = ' + str(heat), (screenSize + 20, 60), 12, 'White')
+    canvas.draw_text('BPM = ' + str(int(pressure)), (screen_size + 20, 20), 12, 'White')
+    canvas.draw_text('Balls = ' + str(len(ball_velocity)), (screen_size + 20, 40), 12, 'White')
+    canvas.draw_text('Heat = ' + str(heat), (screen_size + 20, 60), 12, 'White')
+
 
 # Handler to mouse click
 def mouse_handler(position):
-    global ball, ballVelocity, ballColor, canNew, needNewBall, heat, pause
-    
-    mousePosition = [position[0],position[1]]
-    
+    global ball, ball_velocity, ball_color, can_new, need_new_ball, heat, pause
+
+    mouse_position = [position[0], position[1]]
+
     # pause
-    if screen[0]-300 < mousePosition[0] < screen[0] - 250 and 0 < mousePosition[1] < 50:
+    if screen[0] - 300 < mouse_position[0] < screen[0] - 250 and 0 < mouse_position[1] < 50:
         if not pause:
             work.stop()
             timer.stop()
-            
+
             pause = True
-            
+
         else:
             work.start()
             timer.start()
-            
+
             pause = False
-    
+
     # ball +-
-    if 0 < mousePosition[1] < 50:
-    
-        if screen[0]-100 < mousePosition[0] < screen[0] - 50:
-            
-            needNewBall += 1
-            
-        if screen[0] - 50 < mousePosition[0] < screen[0]:
-            
-            needNewBall -= 1
-                
+    if 0 < mouse_position[1] < 50:
+
+        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+            need_new_ball += 1
+
+        if screen[0] - 50 < mouse_position[0] < screen[0]:
+            need_new_ball -= 1
+
     # ball +- 10
-    if 50 < mousePosition[1] <100:
-    
-        if screen[0]-100 < mousePosition[0] < screen[0]-50:
-            
-            needNewBall += 10
-            
-        if screen[0] - 50 < mousePosition[0] < screen[0]:
-            
-            needNewBall -= 10
-                
+    if 50 < mouse_position[1] < 100:
+
+        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+            need_new_ball += 10
+
+        if screen[0] - 50 < mouse_position[0] < screen[0]:
+            need_new_ball -= 10
+
     # heat +-
-    if 150 < mousePosition[1] < 200:
-        if screen[0] - 100 < mousePosition[0] < screen[0] - 50:
-            
+    if 150 < mouse_position[1] < 200:
+        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
             heat += 0.1
-            heat = round(heat,1)
-            
-        if screen[0] - 50 < mousePosition[0] < screen[0]:
-            
+            heat = round(heat, 1)
+
+        if screen[0] - 50 < mouse_position[0] < screen[0]:
+
             if heat != 0:
                 heat -= 0.1
-                heat = round(heat,1)
-                
+                heat = round(heat, 1)
+
     # heat +- 10
-    if 200 < mousePosition[1] < 250:
-        if screen[0] - 100 < mousePosition[0] < screen[0] - 50:
-            
+    if 200 < mouse_position[1] < 250:
+        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
             heat += 1
-            heat = round(heat,1)
-            
-        if screen[0] - 50 < mousePosition[0] < screen[0]:
-            
+            heat = round(heat, 1)
+
+        if screen[0] - 50 < mouse_position[0] < screen[0]:
+
             if heat > 1:
                 heat -= 1
-                heat = round(heat,1)
-                
+                heat = round(heat, 1)
+
             else:
                 heat = 0
-                
+
     # Coloring in pause
     if pause:
-        for n in range(len(ballVelocity)):
-            if distance(mousePosition, ball[n]) <= ballRadius:
-                if ballColor[n] != 'Red':
-                    ballColor[n] = 'Red'
-                    
-                else:
-                    ballColor[n] = 'White'
-                    
+        for n in range(len(ball_velocity)):
+            if distance(mouse_position, ball[n]) <= ball_radius:
+                if ball_color[n] != 'Red':
+                    ball_color[n] = 'Red'
 
-# Work in interation
+                else:
+                    ball_color[n] = 'White'
+
+
+# Work in iteration
 def work_handler():
-    global ball, ballVelocity, ballMFP, ballColor, canNew, needNewBall, pressureTime, heat, timeStatus, time
-    
-    canNew = True
-    
+    global ball, ball_velocity, ballMFP, ball_color, can_new, need_new_ball, pressure_time, heat, time_status, time
+
+    can_new = True
+
     # For every ball
-    for n in range(len(ballVelocity)):
-        
+    for n in range(len(ball_velocity)):
+
         # For print the velocity of selected balls
-        if ballColor[n] == 'Red' and not pause:
-            print(f'{time} Bola {n} = ', ballVelocity[n])
-            timeStatus = True
-        
-        # Making a list of all balls exept alredy tested and itself
-        listy = list(range(len(ball)))
-        
-        for j in list(range(n)):
-            
-            listy.remove(j)
-        
-        # Cheking if is in collision
-        for i in listy:
-            
-            # Collision for entering balls
-            if n == len(ballVelocity) or i == len(ballVelocity):
-                
-                if n != i and distance(ball[n],ball[i]) <= 3 * ballRadius:
-                    canNew = False
-            
-            # General colision
-            else:
-                
-                if n != i and distance(ball[n],ball[i]) <= 2 * ballRadius:
-                
-                    #print('collision')
-                    ballVelocity[n], ballVelocity[i] = collision(ballVelocity[n], ballVelocity[i], ball[n], ball[i])
-                    
-                    meanFreePath(n, ball[n])
-                    meanFreePath(i, ball[i])
-        
+        if ball_color[n] == 'Red' and not pause:
+            print(f'{time} Bola {n} = ', ball_velocity[n])
+            time_status = True
+
+        general_collision(n)	# comment this line if you don't want collision
+
         # Moving the ball
-        
-        ball[n][0] += ballVelocity[n][0]
-        ball[n][1] += ballVelocity[n][1]
-        
+
+        ball[n][0] += ball_velocity[n][0]
+        ball[n][1] += ball_velocity[n][1]
+
         # Wall collision
-        
-        if not ballRadius < ball[n][0] < screenSize - ballRadius:
-            
-            if ball[n][0] <= ballRadius:
-                
-                ballVelocity[n][0] = heat						# Heat in the left wall
-                
-                ball[n][0] =  (2 * ballRadius) - ball[n][0]
-                
-            elif ball[n][0] >= screenSize - ballRadius:
-                
-                ballVelocity[n][0] = -ballVelocity[n][0]
-                ball[n][0] = (2 * (screenSize - ballRadius)) - ball[n][0]
-            
-            meanFreePath(n, ball[n])
-            
-            pressureTime += 1
-        
-        if not ballRadius < ball[n][1] < screenSize - ballRadius:
-            ballVelocity[n][1] = -ballVelocity[n][1]
-            
-            if ball[n][1] <= ballRadius:
-                ball[n][1] = (2 * ballRadius) - ball[n][1]
-                
-            elif ball[n][1] >= screenSize - ballRadius:
-                ball[n][1] = (2 * (screenSize - ballRadius)) - ball[n][1]
-            
-            meanFreePath(n, ball[n])
-            
-            pressureTime += 1
-    
+
+        if not ball_radius < ball[n][0] < screen_size - ball_radius:
+
+            if ball[n][0] <= ball_radius:
+
+                ball_velocity[n][0] = heat  # Heat in the left wall
+
+                ball[n][0] = (2 * ball_radius) - ball[n][0]
+
+            elif ball[n][0] >= screen_size - ball_radius:
+
+                ball_velocity[n][0] = -ball_velocity[n][0]
+                ball[n][0] = (2 * (screen_size - ball_radius)) - ball[n][0]
+
+            mean_free_path(n)
+
+            pressure_time += 1
+
+        if not ball_radius < ball[n][1] < screen_size - ball_radius:
+            ball_velocity[n][1] = -ball_velocity[n][1]
+
+            if ball[n][1] <= ball_radius:
+                ball[n][1] = (2 * ball_radius) - ball[n][1]
+
+            elif ball[n][1] >= screen_size - ball_radius:
+                ball[n][1] = (2 * (screen_size - ball_radius)) - ball[n][1]
+
+            mean_free_path(n)
+
+            pressure_time += 1
+
     # time of the print
-    if timeStatus:
+    if time_status:
         time += 1
-        timeStatus = False
-    
+        time_status = False
+
     # if it's all ok to create a new ball
-    if canNew and needNewBall > 0:
-        
-        ball.append(list(newBallPosition))
-        ballMFP.append(list(newBallPosition))
-        ballVelocity.append([random.triangular(-1,-0.01), random.triangular(-1,1)])
-        ballColor.append('White')
-        
-        needNewBall -= 1
-        
-    elif needNewBall < 0:
-        if len(ballVelocity) > 0:
-            
-            y = random.randint(0, len(ballVelocity) - 1)
+    if can_new and need_new_ball > 0:
+
+        ball.append(list(new_ball_position))
+        ballMFP.append(list(new_ball_position))
+        ball_velocity.append([random.triangular(-1, -0.01), random.triangular(-1, 1)])
+        ball_color.append('White')
+
+        need_new_ball -= 1
+
+    elif need_new_ball < 0:
+        if len(ball_velocity) > 0:
+
+            y = random.randint(0, len(ball_velocity) - 1)
             ball.pop(y)
             ballMFP.pop(y)
-            ballVelocity.pop(y)
-            ballColor.pop(y)
-            
-            needNewBall += 1
+            ball_velocity.pop(y)
+            ball_color.pop(y)
+
+            need_new_ball += 1
         else:
-            
-            ball = [[screenSize - ballRadius, screenSize / 2]]
-            ballMFP = [[screenSize - ballRadius, screenSize / 2]]
-            ballVelocity = []
-            ballColor = []
-            
-            needNewBall = 0
-            
-# Triger per minute for pressure mesure
+
+            ball = [[screen_size - ball_radius, screen_size / 2]]
+            ballMFP = [[screen_size - ball_radius, screen_size / 2]]
+            ball_velocity = []
+            ball_color = []
+
+            need_new_ball = 0
+
+
+# Trigger per minute for pressure measure
 def timer_handler():
-    global pressure, pressureTime
-    
-    pressure = (pressureTime + pressure) / 2
-    pressureTime = 0
-    
+    global pressure, pressure_time
+
+    pressure = (pressure_time + pressure) / 2
+    pressure_time = 0
+
     # print(f'Min = {min}, nB = {len(ball)}, heat = {heat} ppm = {round(pressure,1)}')
+
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("Home", screen[0], screen[1])
