@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_6.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_7.py
 
 import simplegui
 import random
@@ -8,7 +8,7 @@ screen_size = 500
 
 screen = [16 * screen_size / 9, screen_size]
 
-grid_n = 10
+grid_n = 25
 grid_distances = [screen_size / grid_n, screen_size / grid_n]
 grid_point_zero = [0, 0]
 grid_index = []
@@ -18,16 +18,15 @@ for i in range(grid_n):
     for j in range(grid_n):
         index += [[i, j, []]]
     grid_index += [index]
-
-print(grid_index)
     
-ball_radius = 5
+ball_radius = 3
 ball_border = 0.1
 
 ball = [[screen_size - ball_radius, screen_size / 2]]
 ballMFP = []
 ball_velocity = []
 ball_color = []
+ball_collided = []
 
 new_ball_position = [screen_size - ball_radius, screen_size / 2]
 can_new = True
@@ -63,6 +62,7 @@ def where_balls_grid():
         
         this_index = [nx, ny]
         
+        
         grid_index[this_index[1]][this_index[0]][2] += [i]
 
 
@@ -77,7 +77,7 @@ def collision(v1, v2, p1, p2):
     vector = [p2[0] - p1[0], p2[1] - p1[1]]
 
     # Finding unit normal and unit tangent vector
-    module = math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+    module = ((vector[0] ** 2) + (vector[1] ** 2))** 0.5
     k = [vector[0] / module, vector[1] / module]
 
     v_relative = [v1[0] - v2[0], v1[1] - v2[1]]
@@ -95,33 +95,44 @@ def collision(v1, v2, p1, p2):
 
 
 def general_collision():
-    global grid_index, ball_velocity, can_new
+    global grid_index, ball, ball_velocity, can_new, ball_collided
     
     where_balls_grid()
     
     for k in grid_index:
         for l in k:
-            if len(l[2]) > 1:
-                for n in l[2]:
+            if (0 < l[0] < grid_n - 1) and (0 < l[1] < grid_n - 1):
+                grid_around = [grid_index[l[0] - 1][l[1] - 1][2] + grid_index[l[0]][l[1] - 1][2] + grid_index[l[0] + 1][l[1] - 1][2] + 
+                               grid_index[l[0] - 1][l[1]][2]     + grid_index[l[0]][l[1]][2]     + grid_index[l[0] + 1][l[1]][2]     +
+                               grid_index[l[0] - 1][l[1] + 1][2] + grid_index[l[0]][l[1] + 1][2] + grid_index[l[0] + 1][l[1] + 1][2]]
+                if len(grid_around[0]) > 1:
                     
-                    # Checking if is in collision
-                    for i in l[2]:
-                    
-                        # Collision for entering balls
-                        if n == len(ball_velocity) or i == len(ball_velocity):
-                    
-                            if n != i and distance(ball[n], ball[i]) <= 3 * ball_radius:
-                                can_new = False
-                    
-                        # General collision
-                        else:
-                    
-                            if n != i and distance(ball[n], ball[i]) <= 2 * ball_radius:
-                                # print('collision')
-                                ball_velocity[n], ball_velocity[i] = collision(ball_velocity[n], ball_velocity[i], ball[n], ball[i])
-                    
-                                mean_free_path(n)
-                                mean_free_path(i)
+                    for n in grid_around[0]:
+                        
+                        # Checking if is in collision
+                        for i in grid_around[0]:
+                            
+                            # Collision for entering balls
+                            if n not in ball_collided and i not in ball_collided:
+                                if n == len(ball_velocity) or i == len(ball_velocity):
+                                
+                                    if n != i and distance(ball[n], ball[i]) <= 3 * ball_radius:
+                                        can_new = False
+                                
+                                # General collision
+                                else:
+                                    
+                                    if n != i and distance(ball[n], ball[i]) <= 2 * ball_radius:
+                                        # print('collision')
+                                        ball_velocity[n], ball_velocity[i] = collision(ball_velocity[n], ball_velocity[i], ball[n], ball[i])
+                                        
+                                        ball_collided.append(n)
+                                        ball_collided.append(i)
+                                        #mean_free_path(n)
+                                        #mean_free_path(i)
+                                        
+    ball_collided = []
+    
 
 
 # Mean free path
@@ -149,8 +160,8 @@ def draw(canvas):
                      'Blue')
     
     for i in range(grid_n):
-        canvas.draw_line((0, grid_distances[0] * i), (screen_size, grid_distances[0] * i), 3, 'Red')
-        canvas.draw_line((grid_distances[1] * i, 0), (grid_distances[1] * i, screen_size), 3, 'Red')
+        canvas.draw_line((0, grid_distances[0] * i), (screen_size, grid_distances[0] * i), 1, 'Red')
+        canvas.draw_line((grid_distances[1] * i, 0), (grid_distances[1] * i, screen_size), 1, 'Red')
     
     # pause
     if pause:
@@ -396,5 +407,5 @@ timer = simplegui.create_timer(1000, timer_handler)
 timer.start()
 
 # Timer for pressure per minute
-work = simplegui.create_timer(10, work_handler)
+work = simplegui.create_timer(1, work_handler)
 work.start()
