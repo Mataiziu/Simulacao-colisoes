@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_8.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_9.py
 
 import simplegui
 import random
@@ -8,7 +8,7 @@ screen_size = 500
 
 screen = [16 * screen_size / 9, screen_size]
 
-grid_n = 25
+grid_n = 35
 grid_distances = [screen_size / grid_n, screen_size / grid_n]
 grid_point_zero = [0, 0]
 grid_index = []
@@ -234,54 +234,54 @@ def mouse_handler(position):
             timer.start()
 
             pause = False
-
-    # ball +-
-    if 0 < mouse_position[1] < 50:
-
-        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+    
+    elif screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+        # ball +
+        if 0 < mouse_position[1] < 50:
             need_new_ball += 1
-
-        if screen[0] - 50 < mouse_position[0] < screen[0]:
-            need_new_ball -= 1
-
-    # ball +- 10
-    if 50 < mouse_position[1] < 100:
-
-        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+        
+        # ball + 10
+        elif 50 < mouse_position[1] < 100:
             need_new_ball += 10
-
-        if screen[0] - 50 < mouse_position[0] < screen[0]:
-            need_new_ball -= 10
-
-    # heat +-
-    if 150 < mouse_position[1] < 200:
-        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
+            
+        # heat + 0.1
+        elif 150 < mouse_position[1] < 200:
             heat += 0.1
             heat = round(heat, 1)
-
-        if screen[0] - 50 < mouse_position[0] < screen[0]:
-
+        
+        # heat + 1
+        elif 200 < mouse_position[1] < 250:
+            heat += 1
+            heat = round(heat, 1)
+    
+    
+    elif screen[0] - 50 < mouse_position[0] < screen[0]:
+        # ball -
+        if 0 < mouse_position[1] < 50:
+            need_new_ball -= 1
+        
+        # ball - 10
+        elif 50 < mouse_position[1] < 100:
+            need_new_ball -= 10
+            
+        # heat - 0.1
+        elif 150 < mouse_position[1] < 200:
             if heat != 0:
                 heat -= 0.1
                 heat = round(heat, 1)
-
-    # heat +- 10
-    if 200 < mouse_position[1] < 250:
-        if screen[0] - 100 < mouse_position[0] < screen[0] - 50:
-            heat += 1
-            heat = round(heat, 1)
-
-        if screen[0] - 50 < mouse_position[0] < screen[0]:
-
+        
+        # heat - 1
+        elif 200 < mouse_position[1] < 250:
             if heat > 1:
                 heat -= 1
                 heat = round(heat, 1)
 
             else:
                 heat = 0
-
+    
+    
     # Coloring in pause
-    if pause:
+    elif pause:
         for n in range(len(ball_velocity)):
             if distance(mouse_position, ball[n]) <= ball_radius:
                 if ball_color[n] != 'Red':
@@ -297,7 +297,7 @@ def work_handler():
 
     can_new = True
     
-    general_collision() # comment this line if you don't want collision
+    general_collision()		# comment this line if you don't want collision
     
     # For every ball
     for n in range(len(ball_velocity)):
@@ -315,34 +315,33 @@ def work_handler():
 
         # Wall collision
 
-        if not ball_radius < ball[n][0] < screen_size - ball_radius:
-
-            if ball[n][0] <= ball_radius:
-
-                ball_velocity[n][0] = heat  # Heat in the left wall
-
-                ball[n][0] = (2 * ball_radius) - ball[n][0]
-
-            elif ball[n][0] >= screen_size - ball_radius:
-
-                ball_velocity[n][0] = -ball_velocity[n][0]
-                ball[n][0] = (2 * (screen_size - ball_radius)) - ball[n][0]
-
+        if ball[n][0] <= ball_radius:
+            
+            ball_velocity[n][0] = heat  # Heat in the left wall
+            
+            ball[n][0] = (2 * ball_radius) - ball[n][0]
+            
             mean_free_path(n)
-
             pressure_time += 1
-
+        
+        elif ball[n][0] >= screen_size - ball_radius:
+            
+            ball_velocity[n][0] = -ball_velocity[n][0]
+            ball[n][0] = (2 * (screen_size - ball_radius)) - ball[n][0]
+            
+            mean_free_path(n)
+            pressure_time += 1
+        
         if not ball_radius < ball[n][1] < screen_size - ball_radius:
             ball_velocity[n][1] = -ball_velocity[n][1]
-
+            
             if ball[n][1] <= ball_radius:
                 ball[n][1] = (2 * ball_radius) - ball[n][1]
-
+            
             elif ball[n][1] >= screen_size - ball_radius:
                 ball[n][1] = (2 * (screen_size - ball_radius)) - ball[n][1]
-
+            
             mean_free_path(n)
-
             pressure_time += 1
 
     # time of the print
