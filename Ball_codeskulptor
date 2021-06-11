@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_9.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_10.py
 
 import simplegui
 import random
@@ -8,7 +8,7 @@ screen_size = 500
 
 screen = [16 * screen_size / 9, screen_size]
 
-grid_n = 35
+grid_n = 35			# Must be odd
 grid_distances = [screen_size / grid_n, screen_size / grid_n]
 grid_point_zero = [0, 0]
 grid_index = []
@@ -22,13 +22,9 @@ for i in range(grid_n):
 ball_radius = 3
 ball_border = 0.1
 
-ball = [[screen_size - ball_radius, screen_size / 2]]
-ballMFP = []
-ball_velocity = []
-ball_color = []
+balls = []
 ball_collided = []
 
-new_ball_position = [screen_size - ball_radius, screen_size / 2]
 can_new = True
 
 need_new_ball = 0
@@ -46,8 +42,25 @@ pressure_time = 0
 
 second = 0
 
-print(f'Second = {second}, amount of balls = {len(ball_velocity)}, heat = {heat} pressure per sec = {pressure}, FPS = 60')
+print(f'Second = {second}, amount of balls = 0, heat = {heat} pressure per sec = {pressure}, FPS = 60')
 
+class ball:
+    
+    def __init__(self):
+        self.position = list([screen_size - ball_radius, screen_size / 2])
+        self.velocity = [random.triangular(-1, -0.01), random.triangular(-1, 1)]
+        self.color = (255, 255, 255)
+        self.MFP = list(new_ball_position)
+    
+    def speed(self):
+        ball_speed = (self.velocity[0]**2 + self.velocity[1]**2) ** 0.5
+        if ball_speed > 8:
+            self.color = (0,0,255)
+            
+        else:
+            self.color = (255, 255 - int(ball_speed * 30), int(ball_speed * 30))
+        
+        
 # Tell Where is the ball in the grid
 def where_balls_grid():
     global grid_n, grid_index, grid_distances
@@ -58,10 +71,10 @@ def where_balls_grid():
             grid_index[i][j][2] = []
             
     # Add ball to your grid
-    for i in range(len(ball)):
+    for i in range(len(balls)):
         
-        nx = int(ball[i][0] / grid_distances[0])
-        ny = int(ball[i][1] / grid_distances[1])
+        nx = int(balls[i].position[0] / grid_distances[0])
+        ny = int(balls[i].position[1] / grid_distances[1])
         
         this_index = [nx, ny]
         
@@ -105,8 +118,14 @@ def general_collision():
     # For every grid
     for k in grid_index:
         for l in k:
+            
+            # Collision for entering balls
+            if l[0] == ((len(grid_index)/2) - 0.5) and l[1] == (len(grid_index)) - 1 and len(grid_index[l[0]][l[1]][2]) == 0:
+                can_new = True
+            
+            
             # Exept left and top grids
-            if 0 < l[0] and 0 < l[1]:
+            elif 0 < l[0] and 0 < l[1]:
                 
                 # Check the grid and the neighbor on left, top and top-left
                 grid_around = [grid_index[l[0] - 1][l[1] - 1][2] + grid_index[l[0]][l[1] - 1][2] +  
@@ -122,24 +141,16 @@ def general_collision():
                             # If ball don't collided
                             if n not in ball_collided and i not in ball_collided:
                                 
-                                # Collision for entering balls
-                                if n == len(ball_velocity) or i == len(ball_velocity):
-                                
-                                    if n != i and distance(ball[n], ball[i]) <= 4 * ball_radius:
-                                        can_new = False
-                                
                                 # General collision
-                                else:
+                                if n != i and distance(balls[n].position, balls[i].position) <= 2 * ball_radius:
+                                        
+                                    balls[n].velocity, balls[i].velocity = collision(balls[n].velocity, balls[i].velocity, balls[n].position, balls[i].position)
                                     
-                                    if n != i and distance(ball[n], ball[i]) <= 2 * ball_radius:
-                                        
-                                        ball_velocity[n], ball_velocity[i] = collision(ball_velocity[n], ball_velocity[i], ball[n], ball[i])
-                                        
-                                        ball_collided.append(n)
-                                        ball_collided.append(i)
-                                        
-                                        #mean_free_path(n)
-                                        #mean_free_path(i)
+                                    ball_collided.append(n)
+                                    ball_collided.append(i)
+                                    
+                                    #mean_free_path(n)
+                                    #mean_free_path(i)
     
     # Clear the collision status of the balls
     ball_collided = []
@@ -149,27 +160,28 @@ def general_collision():
 def mean_free_path(n):
     global ballMFP
     
-    MFP = distance(ball[n], ballMFP[n])
+    MFP = distance(balls[n].position, balls[n].MFP)
     
     #print(MFP)
 
-    ballMFP[n] = list(ball[n])
+    balls[n].MFP = list(balls[n].position)
 
 
 # Handler to draw on canvas
 def draw(canvas):
-
+    for i in range(grid_n):
+        canvas.draw_line((0, grid_distances[0] * i), (screen_size, grid_distances[0] * i), 1, 'rgb(30,30,30)')
+        canvas.draw_line((grid_distances[1] * i, 0), (grid_distances[1] * i, screen_size), 1, 'rgb(30,30,30)')
+    
     # Drawing each ball
-    for n in range(len(ball) - 1):
-        canvas.draw_circle([ball[n][0], ball[n][1]], ball_radius, ball_border, 'Transparent', ball_color[n])
+    for n in range(len(balls)):
+        canvas.draw_circle([balls[n].position[0], balls[n].position[1]], ball_radius, ball_border, 'Transparent', f"rgb{balls[n].color}")
 
     canvas.draw_polygon([[screen_size, screen_size], [screen[0], screen_size], [screen[0], 0], [screen_size, 0]], 2, 'Transparent', 'Black')
     canvas.draw_polygon([[screen_size, screen_size], [0, screen_size], [0, 0], [screen_size, 0]], 2, 'White', 'Transparent')
     canvas.draw_line([screen_size, (screen_size / 2) + ball_radius], [screen_size, (screen_size / 2) - ball_radius], 4, 'Blue')
     
-    for i in range(grid_n):
-        canvas.draw_line((0, grid_distances[0] * i), (screen_size, grid_distances[0] * i), 1, 'Lightgray')
-        canvas.draw_line((grid_distances[1] * i, 0), (grid_distances[1] * i, screen_size), 1, 'Lightgray')
+    
     
     # pause
     if pause:
@@ -211,13 +223,13 @@ def draw(canvas):
 
     # general text
     canvas.draw_text('BPM = ' + str(int(pressure)), (screen_size + 20, 20), 12, 'White')
-    canvas.draw_text('Balls = ' + str(len(ball_velocity)), (screen_size + 20, 40), 12, 'White')
+    canvas.draw_text('Balls = ' + str(len(balls)), (screen_size + 20, 40), 12, 'White')
     canvas.draw_text('Heat = ' + str(heat), (screen_size + 20, 60), 12, 'White')
 
 
 # Handler to mouse click
 def mouse_handler(position):
-    global ball_color, need_new_ball, heat, pause
+    global balls, need_new_ball, heat, pause
 
     mouse_position = [position[0], position[1]]
 
@@ -282,64 +294,66 @@ def mouse_handler(position):
     
     # Coloring in pause
     elif pause:
-        for n in range(len(ball_velocity)):
-            if distance(mouse_position, ball[n]) <= ball_radius:
-                if ball_color[n] != 'Red':
-                    ball_color[n] = 'Red'
+        for n in range(len(balls)):
+            if distance(mouse_position, balls[n].position) <= ball_radius:
+                if balls[n].color != (255,0,0):
+                    balls[n].color = (255,0,0)
 
                 else:
-                    ball_color[n] = 'White'
+                    balls[n].color = (255,255,255)
 
 
 # Work in iteration
 def work_handler():
-    global ball, ball_velocity, ballMFP, ball_color, can_new, need_new_ball, pressure_time, red_time_status, red_time, FPS
+    global balls, ball_velocity, ballMFP, ball_color, can_new, need_new_ball, pressure_time, red_time_status, red_time, FPS
 
-    can_new = True
+    can_new = False
     
     general_collision()		# comment this line if you don't want collision
     
     # For every ball
-    for n in range(len(ball_velocity)):
-
+    for n in range(len(balls)):
+        
         # For print the velocity of selected balls
-        if ball_color[n] == 'Red' and not pause:
-            print(f'{red_time} Bola {n} = ', ball_velocity[n])
+        if balls[n].color == (255,0,0) and not pause:
+            print(f'{red_time} Bola {n} = ', balls[n].velocity)
             time_status = True
-            
+        
+        else:
+            balls[n].speed()
         
         # Moving the ball
 
-        ball[n][0] += ball_velocity[n][0]
-        ball[n][1] += ball_velocity[n][1]
+        balls[n].position[0] += balls[n].velocity[0]
+        balls[n].position[1] += balls[n].velocity[1]
 
         # Wall collision
 
-        if ball[n][0] <= ball_radius:
+        if balls[n].position[0] <= ball_radius:
             
-            ball_velocity[n][0] = heat  # Heat in the left wall
+            balls[n].velocity[0] = heat  # Heat in the left wall
             
-            ball[n][0] = (2 * ball_radius) - ball[n][0]
-            
-            mean_free_path(n)
-            pressure_time += 1
-        
-        elif ball[n][0] >= screen_size - ball_radius:
-            
-            ball_velocity[n][0] = -ball_velocity[n][0]
-            ball[n][0] = (2 * (screen_size - ball_radius)) - ball[n][0]
+            balls[n].position[0] = (2 * ball_radius) - balls[n].position[0]
             
             mean_free_path(n)
             pressure_time += 1
         
-        if not ball_radius < ball[n][1] < screen_size - ball_radius:
-            ball_velocity[n][1] = -ball_velocity[n][1]
+        elif balls[n].position[0] >= screen_size - ball_radius:
             
-            if ball[n][1] <= ball_radius:
-                ball[n][1] = (2 * ball_radius) - ball[n][1]
+            balls[n].velocity[0] = -balls[n].velocity[0]
+            balls[n].position[0] = (2 * (screen_size - ball_radius)) - balls[n].position[0]
             
-            elif ball[n][1] >= screen_size - ball_radius:
-                ball[n][1] = (2 * (screen_size - ball_radius)) - ball[n][1]
+            mean_free_path(n)
+            pressure_time += 1
+        
+        if not ball_radius < balls[n].position[1] < screen_size - ball_radius:
+            balls[n].velocity[1] = -balls[n].velocity[1]
+            
+            if balls[n].position[1] <= ball_radius:
+                balls[n].position[1] = (2 * ball_radius) - balls[n].position[1]
+            
+            elif balls[n].position[1] >= screen_size - ball_radius:
+                balls[n].position[1] = (2 * (screen_size - ball_radius)) - balls[n].position[1]
             
             mean_free_path(n)
             pressure_time += 1
@@ -352,29 +366,20 @@ def work_handler():
     # if it's all ok to create a new ball
     if can_new and need_new_ball > 0:
 
-        ball.append(list(new_ball_position))
-        ballMFP.append(list(new_ball_position))
-        ball_velocity.append([random.triangular(-1, -0.01), random.triangular(-1, 1)])
-        ball_color.append('White')
+        balls.append(ball())
 
         need_new_ball -= 1
 
     elif need_new_ball < 0:
-        if len(ball_velocity) > 0:
+        if len(balls) > 0:
 
-            y = random.randint(0, len(ball_velocity) - 1)
-            ball.pop(y)
-            ballMFP.pop(y)
-            ball_velocity.pop(y)
-            ball_color.pop(y)
+            y = random.randint(0, len(balls) - 1)
+            balls.pop(y)
 
             need_new_ball += 1
         else:
 
-            ball = [[screen_size - ball_radius, screen_size / 2]]
-            ballMFP = [[screen_size - ball_radius, screen_size / 2]]
-            ball_velocity = []
-            ball_color = []
+            balls = []
 
             need_new_ball = 0
             
@@ -388,7 +393,7 @@ def timer_handler():
     pressure = (pressure_time + pressure) / 2
     pressure_time = 0
 
-    print(f'Sec = {second}, nB = {len(ball_velocity)}, heat = {heat}, ppm = {round(pressure,1)}, FPS = {FPS}')
+    print(f'Sec = {second}, nB = {len(balls)}, heat = {heat}, ppm = {round(pressure,1)}, FPS = {FPS}')
     
     FPS = 0
 
