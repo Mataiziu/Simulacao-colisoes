@@ -1,4 +1,4 @@
-# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_10.py
+# Codigo do programa feito no site codeskulptor com o link: https://py3.codeskulptor.org/#user306_kJwp0katSg_11.py
 
 import simplegui
 import random
@@ -50,7 +50,7 @@ class ball:
         self.position = list([screen_size - ball_radius, screen_size / 2])
         self.velocity = [random.triangular(-1, -0.01), random.triangular(-1, 1)]
         self.color = (255, 255, 255)
-        self.MFP = list(new_ball_position)
+        self.MFP = list([screen_size - ball_radius, screen_size / 2])
     
     def speed(self):
         ball_speed = (self.velocity[0]**2 + self.velocity[1]**2) ** 0.5
