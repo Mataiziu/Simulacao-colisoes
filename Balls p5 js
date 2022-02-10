@@ -1,0 +1,88 @@
+let x = [[70,80] ,[200,200]]
+
+let r = 5
+
+let v = [[1,1] ,[1,1]]
+
+let c = 0
+
+let line = 0
+
+let xl = 0
+
+function distance(p1,p2) {
+  
+  return (((p1[0] - p2[0]) ** 2) + ((p1[1] - p2[1]) ** 2))** 0.5
+}
+
+function colide(x1, x2) {
+    
+    let vector = [x[x2][0] - x[x1][0], x[x2][1] - x[x1][1]];
+    
+    let module = ((vector[0] ** 2) + (vector[1] ** 2))** 0.5;
+    let k = [vector[0] / module, vector[1] / module];
+
+    let v_relative = [v[x1][0] - v[x2][0], v[x1][1] - v[x2][1]];
+    
+    let v_normal = v_relative[0] * k[0] + v_relative[1] * k[1];
+
+    v_normal = [k[0] * v_normal, k[1] * v_normal];
+
+    v[x1] = [v[x1][0] - v_normal[0], v[x1][1] - v_normal[1]];
+    v[x2] = [v[x2][0] + v_normal[0], v[x2][1] + v_normal[1]];
+  
+}
+function setup() {
+  createCanvas(400, 400);
+  textFont('Libre Caslon Display')
+  textSize(22)
+}
+
+function draw() {
+  background(0);
+  
+  if (mouseIsPressed) {
+    if (c == 0) {
+      line++;
+      c = 1;
+    }
+  } else {
+    c = 0;
+    
+  }
+  
+  for (let i = 0; i < x.length ; i++) {
+    ellipse(x[i][0],x[i][1],2*r,2*r);
+  
+    x[i][0] += v[i][0];
+    x[i][1] += v[i][1];
+  
+  
+    if (i != x.length - 1){
+      for (let j = 0; j < x.length - i - 1 ; j++){
+        if (distance(x[i],x[x.length - 1 - j]) < 2*r) {
+          colide(i,x.length -1 -j);
+          }
+        }
+    }
+    if (x[i][0] < r | x[i][0] > 400 - r) {
+      v[i][0] = -v[i][0];
+    }
+    
+    if (x[i][1] < r | x[i][1] > 400 - r) {
+      v[i][1] = -v[i][1];
+    }
+    
+    if (line > 0 & 10 < x[i][0] & x[i][0] < 30 & 10 < x[i][1] & x[i][1] < 30){
+      xl++;
+    }
+  }
+  if (line > 0 & xl == 0){
+    x.unshift([20,20]);
+    v.unshift([1,1]);
+    line--;
+  }
+  xl = 0
+  
+  text(str(x.length),360,10,200,200)
+}
