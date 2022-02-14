@@ -1,23 +1,24 @@
-let screen = [800,500]
+let screen = [800,400]
 
 let x = [] //[70,80] ,[200,200]
 
-let r = 5
+let r = 4
 
 let v = [] //[1,1] ,[1,1]
 
 let c = 0
 
-let line = 0
+let row = 0
 
 let xl = 0
 
-let xi = 1000
+let xi = 0
 
 for (let i = 0; i < xi ; i++){
   
-  x.unshift([13 * (i % 30),13 * (i - (i % 30)) / 30]);
-  v.unshift([2* Math.random()- 1, 2* Math.random()- 1]);
+  x.unshift([13 * (i % 30) + 10,13 * ((i - (i % 30)) / 30) + 10]);
+  v.unshift([2* Math.random()- 1,
+             2* Math.random()- 1]);
   
 }
 
@@ -55,7 +56,13 @@ function draw() {
   
   if (mouseIsPressed) {
     if (c == 0) {
-      line++;
+      if (mouseX > 400 & mouseY < 200){
+          row++;
+          }
+      
+      if (mouseX > 400 & mouseY > 200){
+          row--;
+          }
       c = 1;
     }
   } else {
@@ -92,14 +99,21 @@ function draw() {
     x[i][0] += v[i][0];
     x[i][1] += v[i][1];
     
-    if (line > 0 & 10 < x[i][0] & x[i][0] < 30 & 10 < x[i][1] & x[i][1] < 30){
+    if (row > 0 & 10 < x[i][0] & x[i][0] < 30 & 10 < x[i][1] & x[i][1] < 30){
       xl++;
     }
   }
-  if (line > 0 & xl == 0){
+  if (row > 0 & xl == 0){
     x.unshift([20,20]);
-    v.unshift([1,1]);
-    line--;
+    v.unshift([2* Math.random()- 1,
+               2* Math.random()- 1]);
+    row--;
+  }
+  
+  if (row < 0){
+    x.pop()
+    v.pop()
+    row++
   }
   xl = 0
   
